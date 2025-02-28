@@ -90,8 +90,8 @@ const HomeHero = () => {
                 <div className="relative">
                   <div className="glass-card rounded-3xl shadow-xl overflow-hidden">
                     <img 
-                      src="https://images.unsplash.com/photo-1527529482837-4698179dc6ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80" 
-                      alt="People sharing ride" 
+                      src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81" 
+                      alt="People sharing rides with map view" 
                       className="w-full object-cover"
                     />
                   </div>

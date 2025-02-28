@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapPin, Navigation } from 'lucide-react';
 import { Location } from '@/lib/types';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 type RideMapProps = {
   origin: Location;
@@ -9,18 +11,110 @@ type RideMapProps = {
   className?: string;
 };
 
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiZXhhbXBsZXVzZXIiLCJhIjoiY2xoejgzeXo5MDJleTNkbzFza3BleXJvNiJ9.example';
+
 const RideMap = ({ origin, destination, className = '' }: RideMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<mapboxgl.Map | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Mock map loading
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 1000);
+    // Only initialize the map if we have both coordinates
+    if (!mapRef.current || !origin.lat || !origin.lng || !destination.lat || !destination.lng) return;
+
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+
+    // Calculate center point and bounds
+    const bounds = new mapboxgl.LngLatBounds(
+      [origin.lng, origin.lat],
+      [destination.lng, destination.lat]
+    );
     
-    return () => clearTimeout(timer);
-  }, []);
+    // Initialize the map
+    const map = new mapboxgl.Map({
+      container: mapRef.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: bounds.getCenter(),
+      zoom: 9
+    });
+    
+    // Save the map instance
+    mapInstance.current = map;
+    
+    // Add markers for origin and destination
+    const originMarker = new mapboxgl.Marker({ color: '#9b87f5' })
+      .setLngLat([origin.lng, origin.lat])
+      .setPopup(new mapboxgl.Popup().setHTML(`<h3>${origin.label}</h3>`))
+      .addTo(map);
+    
+    const destinationMarker = new mapboxgl.Marker({ color: '#FF719A' })
+      .setLngLat([destination.lng, destination.lat])
+      .setPopup(new mapboxgl.Popup().setHTML(`<h3>${destination.label}</h3>`))
+      .addTo(map);
+
+    // Add navigation controls
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    
+    // Fit map to include both markers with padding
+    map.fitBounds(bounds, {
+      padding: 100,
+      maxZoom: 15
+    });
+
+    // Draw a route between the points when the map loads
+    map.on('load', () => {
+      // Get route from Mapbox Directions API
+      fetch(
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`
+      )
+        .then(response => response.json())
+        .then(data => {
+          // Check if the response includes a route
+          if (data.routes && data.routes.length > 0) {
+            const route = data.routes[0].geometry;
+            
+            // Add the route source and layer
+            if (map.getSource('route')) {
+              (map.getSource('route') as mapboxgl.GeoJSONSource).setData(route);
+            } else {
+              map.addSource('route', {
+                type: 'geojson',
+                data: route
+              });
+              
+              map.addLayer({
+                id: 'route',
+                type: 'line',
+                source: 'route',
+                layout: {
+                  'line-join': 'round',
+                  'line-cap': 'round'
+                },
+                paint: {
+                  'line-color': '#9b87f5',
+                  'line-width': 4,
+                  'line-opacity': 0.75
+                }
+              });
+            }
+            
+            setIsLoaded(true);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching route:', error);
+          setIsLoaded(true);
+        });
+    });
+
+    // Cleanup
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
+  }, [origin, destination]);
 
   return (
     <div className={`relative overflow-hidden rounded-2xl ${className}`} ref={mapRef}>
@@ -30,53 +124,9 @@ const RideMap = ({ origin, destination, className = '' }: RideMapProps) => {
         </div>
       )}
       
-      {/* Placeholder map */}
-      <div className={`w-full h-full bg-white transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="absolute inset-0 bg-gradient-to-br from-tagalong-teal/5 to-tagalong-purple/5" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full bg-tagalong-purple/10 animate-pulse-slow" />
-        
-        {/* Origin marker */}
-        <div className="absolute top-1/3 left-1/3 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="relative">
-            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded-md shadow-md text-xs font-medium">
-              {origin.label}
-            </div>
-            <div className="w-4 h-4 bg-tagalong-purple rounded-full" />
-          </div>
-        </div>
-        
-        {/* Destination marker */}
-        <div className="absolute bottom-1/3 right-1/3 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="relative">
-            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded-md shadow-md text-xs font-medium">
-              {destination.label}
-            </div>
-            <div className="w-4 h-4 bg-tagalong-accent rounded-full" />
-          </div>
-        </div>
-        
-        {/* Route line */}
-        <svg className="absolute inset-0 w-full h-full">
-          <defs>
-            <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#9b87f5" />
-              <stop offset="100%" stopColor="#FF719A" />
-            </linearGradient>
-          </defs>
-          <path 
-            d="M 33% 33% Q 50% 50%, 66% 66%" 
-            stroke="url(#routeGradient)" 
-            strokeWidth="3" 
-            fill="none" 
-            strokeDasharray="5,5"
-            className="animate-dash"
-          />
-        </svg>
-        
-        {/* Current location */}
-        <div className="absolute bottom-4 right-4 p-3 bg-white rounded-full shadow-lg">
-          <Navigation className="w-5 h-5 text-tagalong-purple" />
-        </div>
+      {/* Current location button */}
+      <div className="absolute bottom-4 right-4 p-3 bg-white rounded-full shadow-lg z-10">
+        <Navigation className="w-5 h-5 text-tagalong-purple" />
       </div>
     </div>
   );

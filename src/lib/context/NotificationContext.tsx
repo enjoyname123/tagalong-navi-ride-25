@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../supabase';
+import { supabase, DbNotification } from '../supabase';
+import { useAuth } from './AuthContext';
 import { toast } from '@/hooks/use-toast';
 
 export type Notification = {
@@ -22,7 +23,7 @@ type NotificationContextType = {
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => void;
 };
 
-// Sample notifications for demo
+// Sample notifications for initial state
 const initialNotifications: Notification[] = [
   {
     id: 'n1',
@@ -68,96 +69,162 @@ export const useNotifications = () => useContext(NotificationContext);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const { user } = useAuth();
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  // In a real app, we would subscribe to notifications from Supabase
+  // Fetch notifications from Supabase on mount and when user changes
   useEffect(() => {
-    // This would be a real-time subscription to new notifications
-    const setupNotificationListener = async () => {
-      // Example subscription for a real app:
-      // const channel = supabase
-      //   .channel('public:notifications')
-      //   .on('postgres_changes', { 
-      //     event: 'INSERT', 
-      //     schema: 'public', 
-      //     table: 'notifications',
-      //     filter: `user_id=eq.${user?.id}`
-      //   }, (payload) => {
-      //     const newNotification = payload.new as DbNotification;
-      //     addNotification({
-      //       title: newNotification.title,
-      //       message: newNotification.message,
-      //       type: newNotification.type,
-      //       isRead: newNotification.is_read,
-      //       relatedId: newNotification.related_id,
-      //       actionUrl: newNotification.action_url
-      //     });
-      //     
-      //     // Show toast for new notification
-      //     toast({
-      //       title: newNotification.title,
-      //       description: newNotification.message,
-      //     });
-      //   })
-      //   .subscribe();
-      // 
-      // return () => {
-      //   supabase.removeChannel(channel);
-      // };
+    if (!user) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching notifications:', error);
+          return;
+        }
+
+        if (data) {
+          const transformedNotifications: Notification[] = data.map((n: DbNotification) => ({
+            id: n.id,
+            title: n.title,
+            message: n.message,
+            type: n.type,
+            isRead: n.is_read,
+            timestamp: n.created_at,
+            relatedId: n.related_id,
+            actionUrl: n.action_url
+          }));
+          
+          setNotifications(transformedNotifications);
+        }
+      } catch (error) {
+        console.error('Error in fetchNotifications:', error);
+      }
     };
 
-    setupNotificationListener();
-  }, []);
+    fetchNotifications();
 
-  const markAsRead = (id: string) => {
+    // Subscribe to new notifications
+    const channel = supabase
+      .channel('public:notifications')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, (payload) => {
+        const newNotification = payload.new as DbNotification;
+        
+        const transformedNotification: Notification = {
+          id: newNotification.id,
+          title: newNotification.title,
+          message: newNotification.message,
+          type: newNotification.type,
+          isRead: newNotification.is_read,
+          timestamp: newNotification.created_at,
+          relatedId: newNotification.related_id,
+          actionUrl: newNotification.action_url
+        };
+        
+        setNotifications(prev => [transformedNotification, ...prev]);
+        
+        // Show toast for new notification
+        toast({
+          title: newNotification.title,
+          description: newNotification.message,
+        });
+      })
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const markAsRead = async (id: string) => {
     setNotifications(prev => prev.map(n => 
       n.id === id ? { ...n, isRead: true } : n
     ));
     
-    // In a real app, update the database
-    // supabase
-    //   .from('notifications')
-    //   .update({ is_read: true })
-    //   .eq('id', id);
+    if (user) {
+      try {
+        await supabase
+          .from('notifications')
+          .update({ is_read: true })
+          .eq('id', id);
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
+    }
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     
-    // In a real app, update the database
-    // supabase
-    //   .from('notifications')
-    //   .update({ is_read: true })
-    //   .eq('user_id', user?.id);
+    if (user) {
+      try {
+        await supabase
+          .from('notifications')
+          .update({ is_read: true })
+          .eq('user_id', user.id);
+      } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+      }
+    }
   };
 
-  const addNotification = (notification: Omit<Notification, 'id' | 'timestamp'>) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: `n${notifications.length + 1}`,
-      timestamp: new Date().toISOString()
-    };
+  const addNotification = async (notification: Omit<Notification, 'id' | 'timestamp'>) => {
+    if (!user) return;
     
-    setNotifications(prev => [newNotification, ...prev]);
-    
-    // Show toast for new notification
-    toast({
-      title: notification.title,
-      description: notification.message,
-    });
-    
-    // In a real app, insert into the database
-    // supabase
-    //   .from('notifications')
-    //   .insert({
-    //     user_id: user?.id,
-    //     title: notification.title,
-    //     message: notification.message,
-    //     type: notification.type,
-    //     is_read: false,
-    //     related_id: notification.relatedId,
-    //     action_url: notification.actionUrl
-    //   });
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: user.id,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          is_read: false,
+          related_id: notification.relatedId,
+          action_url: notification.actionUrl
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error adding notification:', error);
+        return;
+      }
+      
+      if (data) {
+        const newNotification: Notification = {
+          id: data.id,
+          title: data.title,
+          message: data.message,
+          type: data.type,
+          isRead: data.is_read,
+          timestamp: data.created_at,
+          relatedId: data.related_id,
+          actionUrl: data.action_url
+        };
+        
+        setNotifications(prev => [newNotification, ...prev]);
+        
+        // Show toast for new notification
+        toast({
+          title: notification.title,
+          description: notification.message,
+        });
+      }
+    } catch (error) {
+      console.error('Error in addNotification:', error);
+    }
   };
 
   return (

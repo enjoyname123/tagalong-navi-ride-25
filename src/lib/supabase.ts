@@ -1,7 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// These should be replaced with actual values from your Supabase project
+// These values should be replaced with environment variables
 // For now, we'll use placeholder values that allow the app to build
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://example.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
