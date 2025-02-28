@@ -288,7 +288,7 @@ const RideDetails = () => {
                       className="border-tagalong-purple text-tagalong-purple hover:bg-tagalong-purple/5 rounded-full w-full"
                       asChild
                     >
-                      <Link to={`/chat`}>
+                      <Link to="/chat">
                         <MessageCircle className="w-4 h-4 mr-2" /> Chat
                       </Link>
                     </Button>

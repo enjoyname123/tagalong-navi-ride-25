@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
 import ChatBox from '@/components/ChatBox';
 import { mockChats, mockUsers } from '@/lib/mockData';
@@ -122,7 +123,7 @@ const Chat = () => {
                         asChild
                         className="bg-tagalong-purple hover:bg-tagalong-purple-dark text-white rounded-full tagalong-button"
                       >
-                        <a href="/find-ride">Find a Ride</a>
+                        <Link to="/find-ride">Find a Ride</Link>
                       </Button>
                     </div>
                   )}

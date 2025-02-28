@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
 import ProfileCard from '@/components/ProfileCard';
 import RideCard from '@/components/RideCard';
@@ -175,14 +176,14 @@ const UserProfile = () => {
                             asChild
                             className="bg-tagalong-purple hover:bg-tagalong-purple-dark text-white rounded-full tagalong-button"
                           >
-                            <a href="/find-ride">Find a Ride</a>
+                            <Link to="/find-ride">Find a Ride</Link>
                           </Button>
                           <Button
                             asChild
                             variant="outline"
                             className="border-tagalong-purple text-tagalong-purple hover:bg-tagalong-purple/5 rounded-full"
                           >
-                            <a href="/offer-ride">Offer a Ride</a>
+                            <Link to="/offer-ride">Offer a Ride</Link>
                           </Button>
                         </div>
                       </div>
@@ -205,7 +206,7 @@ const UserProfile = () => {
                           asChild
                           className="bg-tagalong-purple hover:bg-tagalong-purple-dark text-white rounded-full tagalong-button"
                         >
-                          <a href="/find-ride">Find Your First Ride</a>
+                          <Link to="/find-ride">Find Your First Ride</Link>
                         </Button>
                       </div>
                     )}
@@ -222,7 +223,7 @@ const UserProfile = () => {
                         asChild
                         className="bg-tagalong-purple hover:bg-tagalong-purple-dark text-white rounded-full tagalong-button"
                       >
-                        <a href="/find-ride">Browse Rides</a>
+                        <Link to="/find-ride">Browse Rides</Link>
                       </Button>
                     </div>
                   </TabsContent>
