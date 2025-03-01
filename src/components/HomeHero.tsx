@@ -38,30 +38,25 @@ const HomeHero = () => {
                   Find a Ride <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
+              
               <Button 
                 asChild
                 variant="outline"
                 size="lg"
-                className="border-white text-white hover:bg-white/10 rounded-full tagalong-button"
+                className="border-white text-white hover:bg-white/20 rounded-full tagalong-button"
               >
-                <Link to="/offer-ride" className="flex items-center">
-                  Offer a Ride <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+                <Link to="/offer-ride">
+                  Offer a Ride <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
             </div>
             
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-1 gap-6">
               <div className="flex items-center text-white">
                 <div className="bg-white/20 rounded-full p-2 mr-3">
                   <Users className="w-5 h-5" />
                 </div>
-                <span>1M+ happy users</span>
-              </div>
-              <div className="flex items-center text-white">
-                <div className="bg-white/20 rounded-full p-2 mr-3">
-                  <Calendar className="w-5 h-5" />
-                </div>
-                <span>50K+ daily rides</span>
+                <span>Only for Hyderabad</span>
               </div>
             </div>
           </div>
