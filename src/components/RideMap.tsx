@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MapPin, Navigation } from 'lucide-react';
 import { Location } from '@/lib/types';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
@@ -81,7 +81,6 @@ const RideMap = ({ origin, destination, className = '' }: RideMapProps) => {
     className: 'destination-marker'  // For custom styling
   });
   
-  // Add the useState import at the top
   useEffect(() => {
     setIsLoaded(true);
   }, []);
@@ -99,6 +98,11 @@ const RideMap = ({ origin, destination, className = '' }: RideMapProps) => {
       </div>
     );
   }
+
+  const handleMapError = () => {
+    setMapError('Failed to load map tiles');
+    return true;
+  };
 
   return (
     <div className={`relative overflow-hidden rounded-2xl ${className}`}>
@@ -123,7 +127,9 @@ const RideMap = ({ origin, destination, className = '' }: RideMapProps) => {
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          onError={() => setMapError('Failed to load map tiles')}
+          eventHandlers={{
+            error: handleMapError
+          }}
         />
         
         <Marker 
@@ -156,14 +162,16 @@ const RideMap = ({ origin, destination, className = '' }: RideMapProps) => {
         <Navigation className="w-5 h-5 text-tagalong-purple" />
       </div>
       
-      <style jsx global>{`
+      <style>
+        {`
         .origin-marker {
           filter: hue-rotate(230deg);
         }
         .destination-marker {
           filter: hue-rotate(320deg);
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
