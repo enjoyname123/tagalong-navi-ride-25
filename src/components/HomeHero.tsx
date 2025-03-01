@@ -1,7 +1,7 @@
 
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Calendar, MapPin, Users } from 'lucide-react';
+import { ArrowRight, Users } from 'lucide-react';
 
 const HomeHero = () => {
   return (
@@ -41,9 +41,8 @@ const HomeHero = () => {
               
               <Button 
                 asChild
-                variant="outline"
                 size="lg"
-                className="border-white text-white hover:bg-white/20 rounded-full tagalong-button"
+                className="bg-white text-tagalong-purple hover:bg-white/90 rounded-full tagalong-button"
               >
                 <Link to="/offer-ride">
                   Offer a Ride <ArrowRight className="ml-2 w-5 h-5" />
