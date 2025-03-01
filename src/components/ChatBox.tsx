@@ -46,6 +46,15 @@ const ChatBox = ({ chat, currentUser }: ChatBoxProps) => {
     });
   };
 
+  const sendGreeting = async () => {
+    const greeting = "Hello! I'm interested in your ride.";
+    try {
+      await sendMessage(chat.id, greeting);
+    } catch (error) {
+      console.error('Error sending greeting:', error);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Chat header */}
@@ -82,10 +91,7 @@ const ChatBox = ({ chat, currentUser }: ChatBoxProps) => {
               Say hello and start chatting about your ride details or any questions you may have.
             </p>
             <Button 
-              onClick={() => {
-                const greeting = "Hello! I'm interested in your ride.";
-                sendMessage(chat.id, greeting);
-              }}
+              onClick={sendGreeting}
               className="bg-tagalong-purple hover:bg-tagalong-purple-dark text-white rounded-full"
             >
               Send a greeting

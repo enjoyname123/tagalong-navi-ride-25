@@ -153,7 +153,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
             message: `${otherUser.name} replied to your message`,
             type: 'chat_message',
             isRead: false,
-            linkUrl: '/chat'
+            actionUrl: '/chat'
           });
         }, 2000);
       }

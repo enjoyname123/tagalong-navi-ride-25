@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
 import ChatBox from '@/components/ChatBox';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -15,13 +15,20 @@ const Chat = () => {
   const { chats, selectedChat, selectChat, isLoadingChats } = useMessages();
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileViewingChat, setIsMobileViewingChat] = useState(false);
+  const location = useLocation();
   
   useEffect(() => {
+    // Check if we were redirected from a ride detail page
+    if (location.state?.fromRide && selectedChat) {
+      // Auto-select the chat when navigating from a ride
+      setIsMobileViewingChat(true);
+    }
+    
     // Check for mobile view on initial render and when selectedChat changes
     const checkMobileView = () => {
       if (window.innerWidth < 768 && selectedChat) {
         setIsMobileViewingChat(true);
-      } else {
+      } else if (!selectedChat) {
         setIsMobileViewingChat(false);
       }
     };
@@ -34,7 +41,7 @@ const Chat = () => {
     return () => {
       window.removeEventListener('resize', checkMobileView);
     };
-  }, [selectedChat]);
+  }, [selectedChat, location]);
   
   if (!user) {
     return null; // Should be handled by ProtectedRoute
@@ -48,6 +55,7 @@ const Chat = () => {
 
   const handleSelectChat = (chat: ChatType) => {
     selectChat(chat.id);
+    setIsMobileViewingChat(true);
   };
 
   if (isLoadingChats) {

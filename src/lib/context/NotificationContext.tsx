@@ -20,7 +20,7 @@ type NotificationContextType = {
   unreadCount: number;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
-  addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => void;
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp'> & { actionUrl?: string }) => void;
 };
 
 // Sample notifications for initial state
@@ -179,7 +179,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  const addNotification = async (notification: Omit<Notification, 'id' | 'timestamp'>) => {
+  const addNotification = async (notification: Omit<Notification, 'id' | 'timestamp'> & { actionUrl?: string }) => {
     if (!user) return;
     
     try {

@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
 import RideMap from '@/components/RideMap';
 import ProfileCard from '@/components/ProfileCard';
@@ -11,6 +10,8 @@ import { MapPin, Clock, Calendar, Shield, Phone, MessageCircle, Heart, AlertCirc
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { useMessages } from '@/lib/context/MessageContext';
+import { useAuth } from '@/lib/context/AuthContext';
 
 const RideDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +19,9 @@ const RideDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [bookingStatus, setBookingStatus] = useState<'none' | 'requested' | 'confirmed'>('none');
   const [isFavorite, setIsFavorite] = useState(false);
+  const { createChat } = useMessages();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
   useEffect(() => {
     // In a real app, this would be an API call
@@ -76,6 +80,21 @@ const RideDetails = () => {
       toast({
         title: "Added to Favorites",
         description: "This ride has been added to your favorites.",
+      });
+    }
+  };
+  
+  const handleChatClick = async () => {
+    if (!user || !ride) return;
+    
+    try {
+      const chatId = await createChat(ride.driver.id, ride.id);
+      navigate('/chat');
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      toast({
+        title: "Error",
+        description: "Could not start a chat with the driver. Please try again.",
       });
     }
   };
@@ -286,11 +305,9 @@ const RideDetails = () => {
                     <Button 
                       variant="outline"
                       className="border-tagalong-purple text-tagalong-purple hover:bg-tagalong-purple/5 rounded-full w-full"
-                      asChild
+                      onClick={handleChatClick}
                     >
-                      <Link to="/chat">
-                        <MessageCircle className="w-4 h-4 mr-2" /> Chat
-                      </Link>
+                      <MessageCircle className="w-4 h-4 mr-2" /> Chat
                     </Button>
                     <Button 
                       variant="outline"
