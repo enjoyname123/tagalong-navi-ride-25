@@ -114,6 +114,11 @@
     @apply scale-x-100;
   }
   
+  /* Add additional button hover styles for consistency */
+  .tagalong-button:hover .ml-2 {
+    @apply translate-x-1;
+  }
+  
   .animate-enter {
     animation: fadeIn 0.6s ease-out forwards;
   }

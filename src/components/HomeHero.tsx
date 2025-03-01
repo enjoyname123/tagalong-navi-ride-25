@@ -42,22 +42,15 @@ const HomeHero = () => {
                 asChild
                 variant="outline"
                 size="lg"
-                className="border-white text-white hover:bg-white/10 rounded-full tagalong-button group relative overflow-hidden"
+                className="border-white text-white hover:bg-white/10 rounded-full tagalong-button"
               >
-                <Link to="/offer-ride" className="relative z-10 flex items-center">
-                  <span className="transition-all duration-300">Offer a Ride</span> <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
-                  <span className="absolute inset-0 w-full h-full bg-white/0 group-hover:bg-white/20 transition-colors duration-300 -z-10"></span>
+                <Link to="/offer-ride" className="flex items-center">
+                  Offer a Ride <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
             </div>
             
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="flex items-center text-white">
-                <div className="bg-white/20 rounded-full p-2 mr-3">
-                  <MapPin className="w-5 h-5" />
-                </div>
-                <span>300+ cities covered</span>
-              </div>
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="flex items-center text-white">
                 <div className="bg-white/20 rounded-full p-2 mr-3">
                   <Users className="w-5 h-5" />
