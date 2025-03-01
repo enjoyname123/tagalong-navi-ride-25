@@ -63,8 +63,8 @@ const ChatBox = ({ chat, currentUser }: ChatBoxProps) => {
           <div>
             <div className="font-medium">{otherUser.name}</div>
             <div className="text-xs text-gray-500 flex items-center">
-              <span className={`w-2 h-2 rounded-full ${Math.random() > 0.5 ? 'bg-green-500' : 'bg-gray-300'} mr-1`}></span>
-              {Math.random() > 0.5 ? 'Online' : 'Last seen ' + formatDistanceToNow(new Date(Date.now() - Math.floor(Math.random() * 60 * 24) * 60000), { addSuffix: true })}
+              <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+              Online
             </div>
           </div>
         </div>
@@ -81,6 +81,12 @@ const ChatBox = ({ chat, currentUser }: ChatBoxProps) => {
             <p className="text-gray-600 mb-4 max-w-xs">
               Say hello and start chatting about your ride details or any questions you may have.
             </p>
+            <Button 
+              onClick={() => handleSendMessage("Hello! I'm interested in your ride.")}
+              className="bg-tagalong-purple hover:bg-tagalong-purple-dark text-white rounded-full"
+            >
+              Send a greeting
+            </Button>
           </div>
         ) : (
           chat.messages.map((message) => {
@@ -93,7 +99,7 @@ const ChatBox = ({ chat, currentUser }: ChatBoxProps) => {
                 className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`flex gap-2 max-w-[80%] ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 self-end">
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-tagalong-purple/10">
                       {sender.profileImage ? (
                         <img src={sender.profileImage} alt={sender.name} className="w-full h-full object-cover" />

@@ -58,6 +58,7 @@ const Signup = () => {
               socialButtonsProviderIcon: "w-5 h-5",
               formFieldInputShowPasswordButton: "text-gray-500",
               formResendCodeLink: "text-tagalong-purple hover:text-tagalong-purple-dark",
+              footer: "hidden", // This hides the footer with "Secured by Clerk"
             }
           }}
         />

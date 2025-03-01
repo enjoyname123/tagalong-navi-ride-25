@@ -34,14 +34,22 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const { user } = useAuth();
 
   useEffect(() => {
-    // In a real app, we would fetch chats from Supabase
+    // Load chats when user changes
     const fetchChats = async () => {
       setIsLoadingChats(true);
+      
       try {
-        // For the demo, we'll use mock data
-        setChats(mockChats);
-        if (mockChats.length > 0) {
-          setSelectedChat(mockChats[0]);
+        if (user) {
+          // Filter mock chats to only show chats where this user is a participant
+          const userChats = mockChats.filter(chat => 
+            chat.participants.some(p => p.id === user.id)
+          );
+          
+          setChats(userChats);
+          setSelectedChat(userChats.length > 0 ? userChats[0] : null);
+        } else {
+          setChats([]);
+          setSelectedChat(null);
         }
       } catch (error) {
         console.error('Error fetching chats:', error);
@@ -51,77 +59,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     fetchChats();
-    
-    // Set up real-time subscription for new messages
-    // In a real app:
-    // const channel = supabase
-    //   .channel('public:messages')
-    //   .on('postgres_changes', { 
-    //     event: 'INSERT', 
-    //     schema: 'public', 
-    //     table: 'messages',
-    //   }, async (payload) => {
-    //     const newMessage = payload.new as DbMessage;
-    //     
-    //     // Fetch the chat this message belongs to
-    //     const { data: chatData } = await supabase
-    //       .from('chats')
-    //       .select('*')
-    //       .eq('id', newMessage.chat_id)
-    //       .single();
-    //     
-    //     if (chatData) {
-    //       // Update the chat's last_updated
-    //       await supabase
-    //         .from('chats')
-    //         .update({ last_updated: new Date().toISOString() })
-    //         .eq('id', newMessage.chat_id);
-    //       
-    //       // Check if the message is from someone else
-    //       if (newMessage.sender_id !== user?.id) {
-    //         // Create a notification
-    //         const { data: senderData } = await supabase
-    //           .from('users')
-    //           .select('name')
-    //           .eq('id', newMessage.sender_id)
-    //           .single();
-    //           
-    //         if (senderData) {
-    //           addNotification({
-    //             title: 'New Message',
-    //             message: `${senderData.name} sent you a message: "${newMessage.text.substring(0, 30)}${newMessage.text.length > 30 ? '...' : ''}"`,
-    //             type: 'chat_message',
-    //             isRead: false,
-    //             relatedId: newMessage.chat_id,
-    //             actionUrl: '/chat'
-    //           });
-    //         }
-    //       }
-    //       
-    //       // Update the chats state with the new message
-    //       setChats(prev => prev.map(chat => {
-    //         if (chat.id === newMessage.chat_id) {
-    //           return {
-    //             ...chat,
-    //             messages: [...chat.messages, {
-    //               id: newMessage.id,
-    //               senderId: newMessage.sender_id,
-    //               text: newMessage.text,
-    //               timestamp: newMessage.created_at,
-    //               isRead: newMessage.is_read
-    //             }],
-    //             lastUpdated: new Date().toISOString()
-    //           };
-    //         }
-    //         return chat;
-    //       }));
-    //     }
-    //   })
-    //   .subscribe();
-    // 
-    // return () => {
-    //   supabase.removeChannel(channel);
-    // };
   }, [user]);
 
   const selectChat = (chatId: string) => {
@@ -145,14 +82,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return c;
       });
       setChats(updatedChats);
-      
-      // In a real app, update the database:
-      // await supabase
-      //   .from('messages')
-      //   .update({ is_read: true })
-      //   .eq('chat_id', chatId)
-      //   .neq('sender_id', user?.id)
-      //   .eq('is_read', false);
     }
   };
 
@@ -190,27 +119,54 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       });
     }
     
-    // In a real app, send to the database:
-    // try {
-    //   await supabase
-    //     .from('messages')
-    //     .insert({
-    //       chat_id: chatId,
-    //       sender_id: user.id,
-    //       text,
-    //       is_read: false
-    //     });
-    //   
-    //   // Update the chat's last_updated time
-    //   await supabase
-    //     .from('chats')
-    //     .update({ last_updated: timestamp })
-    //     .eq('id', chatId);
-    // } catch (error) {
-    //   console.error('Error sending message:', error);
-    //   // Revert optimistic update on error
-    //   setChats(chats);
-    // }
+    // Add notification for demo
+    if (selectedChat) {
+      const otherUser = selectedChat.participants.find(p => p.id !== user.id);
+      if (otherUser) {
+        setTimeout(() => {
+          // Add a simulated response from the other user
+          const responseMessage: ChatMessage = {
+            id: `m${Date.now() + 1}`,
+            senderId: otherUser.id,
+            text: `Thanks for your message: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`,
+            timestamp: new Date().toISOString(),
+            isRead: false
+          };
+          
+          const updatedChatsWithResponse = chats.map(chat => {
+            if (chat.id === chatId) {
+              return {
+                ...chat,
+                messages: [...chat.messages, responseMessage],
+                lastUpdated: responseMessage.timestamp
+              };
+            }
+            return chat;
+          });
+          
+          setChats(updatedChatsWithResponse);
+          
+          if (selectedChat?.id === chatId) {
+            setSelectedChat({
+              ...selectedChat,
+              messages: [...selectedChat.messages, responseMessage],
+              lastUpdated: responseMessage.timestamp
+            });
+          }
+          
+          // Add a notification for the response
+          addNotification({
+            id: `n${Date.now()}`,
+            title: 'New Message',
+            message: `${otherUser.name} replied to your message`,
+            timestamp: responseMessage.timestamp,
+            type: 'message',
+            isRead: false,
+            linkUrl: '/chat'
+          });
+        }, 2000); // Simulate a 2-second delay for the response
+      }
+    }
   };
 
   const createChat = async (userId: string, rideId: string): Promise<string> => {
@@ -233,7 +189,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const otherUser = mockUsers.find(u => u.id === userId);
     if (!otherUser) throw new Error('User not found');
     
-    const newChatId = `c${chats.length + 1}`;
+    const newChatId = `c${Date.now()}`;
     const timestamp = new Date().toISOString();
     
     const newChat: Chat = {
@@ -246,34 +202,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     
     setChats([newChat, ...chats]);
     setSelectedChat(newChat);
-    
-    // In a real app:
-    // try {
-    //   // Create a new chat
-    //   const { data: chatData, error: chatError } = await supabase
-    //     .from('chats')
-    //     .insert({
-    //       ride_id: rideId,
-    //       last_updated: timestamp
-    //     })
-    //     .select()
-    //     .single();
-    //   
-    //   if (chatError) throw chatError;
-    //   
-    //   // Add participants to the chat
-    //   await supabase
-    //     .from('chat_participants')
-    //     .insert([
-    //       { chat_id: chatData.id, user_id: user.id },
-    //       { chat_id: chatData.id, user_id: userId }
-    //     ]);
-    //   
-    //   return chatData.id;
-    // } catch (error) {
-    //   console.error('Error creating chat:', error);
-    //   throw error;
-    // }
     
     return newChatId;
   };
