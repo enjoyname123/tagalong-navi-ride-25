@@ -1,9 +1,23 @@
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { MapPin, Navigation } from 'lucide-react';
 import { Location } from '@/lib/types';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default marker icons in Leaflet
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 type RideMapProps = {
   origin: Location;
@@ -11,144 +25,145 @@ type RideMapProps = {
   className?: string;
 };
 
-// Use a valid public Mapbox token
-const MAPBOX_TOKEN = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA';
+// Component to fit bounds and draw route
+const MapController = ({ origin, destination }: { origin: Location; destination: Location }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (!origin.lat || !origin.lng || !destination.lat || !destination.lng) return;
+    
+    // Create bounds and fit map to include both markers
+    const bounds = L.latLngBounds(
+      [origin.lat, origin.lng],
+      [destination.lat, destination.lng]
+    );
+    
+    map.fitBounds(bounds, { padding: [50, 50] });
+    
+    // Draw route between the points
+    const points = [
+      [origin.lat, origin.lng],
+      [destination.lat, destination.lng]
+    ];
+    
+    const polyline = L.polyline(points as L.LatLngExpression[], {
+      color: '#9b87f5',
+      weight: 4,
+      opacity: 0.7
+    }).addTo(map);
+    
+    return () => {
+      map.removeLayer(polyline);
+    };
+  }, [map, origin, destination]);
+  
+  return null;
+};
 
 const RideMap = ({ origin, destination, className = '' }: RideMapProps) => {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<mapboxgl.Map | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
-
+  
+  // Custom marker icons
+  const originIcon = new L.Icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    className: 'origin-marker'  // For custom styling
+  });
+  
+  const destinationIcon = new L.Icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    className: 'destination-marker'  // For custom styling
+  });
+  
+  // Add the useState import at the top
   useEffect(() => {
-    // Only initialize the map if we have both coordinates
-    if (!mapRef.current || !origin.lat || !origin.lng || !destination.lat || !destination.lng) return;
-
-    try {
-      mapboxgl.accessToken = MAPBOX_TOKEN;
-
-      // Calculate center point and bounds
-      const bounds = new mapboxgl.LngLatBounds(
-        [origin.lng, origin.lat],
-        [destination.lng, destination.lat]
-      );
-      
-      // Initialize the map
-      const map = new mapboxgl.Map({
-        container: mapRef.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: bounds.getCenter(),
-        zoom: 9
-      });
-      
-      // Save the map instance
-      mapInstance.current = map;
-      
-      // Handle map load errors
-      map.on('error', (e) => {
-        console.error('Map error:', e);
-        setMapError('Failed to load map. Please try again later.');
-      });
-      
-      // Add markers for origin and destination
-      const originMarker = new mapboxgl.Marker({ color: '#9b87f5' })
-        .setLngLat([origin.lng, origin.lat])
-        .setPopup(new mapboxgl.Popup().setHTML(`<h3>${origin.label}</h3>`))
-        .addTo(map);
-      
-      const destinationMarker = new mapboxgl.Marker({ color: '#FF719A' })
-        .setLngLat([destination.lng, destination.lat])
-        .setPopup(new mapboxgl.Popup().setHTML(`<h3>${destination.label}</h3>`))
-        .addTo(map);
-
-      // Add navigation controls
-      map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      
-      // Fit map to include both markers with padding
-      map.fitBounds(bounds, {
-        padding: 100,
-        maxZoom: 15
-      });
-
-      // Draw a route between the points when the map loads
-      map.on('load', () => {
-        setIsLoaded(true);
-        
-        // Get route from Mapbox Directions API
-        fetch(
-          `https://api.mapbox.com/directions/v5/mapbox/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`
-        )
-          .then(response => response.json())
-          .then(data => {
-            // Check if the response includes a route
-            if (data.routes && data.routes.length > 0) {
-              const route = data.routes[0].geometry;
-              
-              // Add the route source and layer
-              if (map.getSource('route')) {
-                (map.getSource('route') as mapboxgl.GeoJSONSource).setData(route);
-              } else {
-                map.addSource('route', {
-                  type: 'geojson',
-                  data: route
-                });
-                
-                map.addLayer({
-                  id: 'route',
-                  type: 'line',
-                  source: 'route',
-                  layout: {
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                  },
-                  paint: {
-                    'line-color': '#9b87f5',
-                    'line-width': 4,
-                    'line-opacity': 0.75
-                  }
-                });
-              }
-            }
-          })
-          .catch(error => {
-            console.error('Error fetching route:', error);
-          });
-      });
-    } catch (error) {
-      console.error('Map initialization error:', error);
-      setMapError('Failed to initialize map.');
-      setIsLoaded(true);
-    }
-
-    // Cleanup
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-    };
-  }, [origin, destination]);
+    setIsLoaded(true);
+  }, []);
+  
+  // Check if we have valid coordinates
+  const hasValidCoordinates = 
+    origin.lat && origin.lng && destination.lat && destination.lng;
+  
+  if (!hasValidCoordinates) {
+    return (
+      <div className={`relative overflow-hidden rounded-2xl bg-gray-100 flex items-center justify-center ${className}`}>
+        <div className="text-gray-500 p-4 text-center">
+          Invalid location coordinates
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`relative overflow-hidden rounded-2xl ${className}`}>
-      <div className="w-full h-full" ref={mapRef}>
-        {!isLoaded && (
-          <div className="absolute inset-0 bg-gray-100 animate-pulse flex items-center justify-center">
-            <div className="text-gray-400">Loading map...</div>
-          </div>
-        )}
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-gray-100 animate-pulse flex items-center justify-center">
+          <div className="text-gray-400">Loading map...</div>
+        </div>
+      )}
+      
+      {mapError && (
+        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+          <div className="text-red-500 text-center p-4">{mapError}</div>
+        </div>
+      )}
+      
+      <MapContainer 
+        center={[origin.lat || 0, origin.lng || 0]} 
+        zoom={12} 
+        style={{ height: '100%', width: '100%' }}
+        className="z-0"
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          onError={() => setMapError('Failed to load map tiles')}
+        />
         
-        {mapError && (
-          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
-            <div className="text-red-500 text-center p-4">{mapError}</div>
-          </div>
-        )}
-      </div>
+        <Marker 
+          position={[origin.lat, origin.lng]} 
+          icon={originIcon}
+        >
+          <Popup>
+            <div className="p-1 text-sm">
+              <strong>From:</strong> {origin.label}
+            </div>
+          </Popup>
+        </Marker>
+        
+        <Marker 
+          position={[destination.lat, destination.lng]} 
+          icon={destinationIcon}
+        >
+          <Popup>
+            <div className="p-1 text-sm">
+              <strong>To:</strong> {destination.label}
+            </div>
+          </Popup>
+        </Marker>
+        
+        <MapController origin={origin} destination={destination} />
+      </MapContainer>
       
       {/* Current location button */}
       <div className="absolute bottom-4 right-4 p-3 bg-white rounded-full shadow-lg z-10">
         <Navigation className="w-5 h-5 text-tagalong-purple" />
       </div>
+      
+      <style jsx global>{`
+        .origin-marker {
+          filter: hue-rotate(230deg);
+        }
+        .destination-marker {
+          filter: hue-rotate(320deg);
+        }
+      `}</style>
     </div>
   );
 };
