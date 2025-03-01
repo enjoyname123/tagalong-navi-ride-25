@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
 import { supabase, getCurrentUser, DbUser } from '../supabase';
 import { User } from '../types';
 import { mockUsers } from '../mockData';
@@ -25,56 +26,65 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { isLoaded: isClerkLoaded, isSignedIn, userId } = useClerkAuth();
+  const { user: clerkUser } = useUser();
 
   useEffect(() => {
-    // In a production app, we would fetch the real user data from Supabase
-    // For the demo, we'll use the first mock user
+    // Load user data when Clerk auth is loaded
     const loadUser = async () => {
       setIsLoading(true);
+      
       try {
-        // In a real app, this would fetch the user from Supabase
-        // const dbUser = await getCurrentUser();
-        
-        // For the demo, using mock data
-        const mockUser = mockUsers[0];
-        
-        if (mockUser) {
-          setUser(mockUser);
+        if (isClerkLoaded) {
+          if (isSignedIn && userId && clerkUser) {
+            // In a real app, we would fetch user profile from our database
+            // For demo, create a user object from Clerk data or use mock data
+            
+            // Try to find a matching mock user (for demo purposes)
+            const mockUser = mockUsers.find(u => u.email === clerkUser.primaryEmailAddress?.emailAddress);
+            
+            if (mockUser) {
+              setUser(mockUser);
+            } else {
+              // Create a new user based on Clerk data
+              const newUser: User = {
+                id: userId,
+                name: clerkUser.firstName && clerkUser.lastName 
+                  ? `${clerkUser.firstName} ${clerkUser.lastName}`
+                  : clerkUser.username || 'TagAlong User',
+                email: clerkUser.primaryEmailAddress?.emailAddress || '',
+                profileImage: clerkUser.imageUrl || null,
+                phone: clerkUser.phoneNumbers?.[0]?.phoneNumber || null,
+                rating: 0,
+                isVerified: clerkUser.emailAddresses?.[0]?.verification?.status === 'verified',
+                ridesCompleted: 0,
+                dateJoined: new Date().toISOString()
+              };
+              
+              setUser(newUser);
+            }
+          } else {
+            setUser(null);
+          }
+          
+          setIsLoading(false);
         }
       } catch (error) {
         console.error('Error loading user:', error);
-      } finally {
         setIsLoading(false);
       }
     };
 
     loadUser();
+  }, [isClerkLoaded, isSignedIn, userId, clerkUser]);
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        // In a real app, fetch user profile
-        // We're using mock data for demo
-        setUser(mockUsers[0]);
-      } else {
-        setUser(null);
-      }
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
+  // These methods use the mocked Supabase methods for demo
+  // In a production app with Clerk, these would be removed or adapted
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (!error) {
-        // For demo, directly set the mock user
-        setUser(mockUsers[0]);
-      }
-      return { error };
+      // This is just for compatibility with existing code
+      // Clerk handles the actual sign in
+      return { error: null };
     } catch (error) {
       console.error('Error signing in:', error);
       return { error: error as Error };
@@ -82,25 +92,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
+    // Clerk handles sign out in the UI
+    setUser(null);
   };
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      const { error, data } = await supabase.auth.signUp({ email, password });
-      
-      if (!error && data.user) {
-        // In a real app, create user profile in the database
-        // For the demo, we'll use the mock user
-        setUser(mockUsers[0]);
-      }
-      
-      return { error };
+      // This is just for compatibility with existing code
+      // Clerk handles the actual sign up
+      return { error: null };
     } catch (error) {
       console.error('Error signing up:', error);
       return { error: error as Error };
@@ -108,7 +108,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signOut, signUp }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading: isLoading || !isClerkLoaded, 
+      signIn, 
+      signOut, 
+      signUp 
+    }}>
       {children}
     </AuthContext.Provider>
   );

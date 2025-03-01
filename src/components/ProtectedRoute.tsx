@@ -1,9 +1,12 @@
 
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth as useClerkAuth } from '@clerk/clerk-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isLoaded, userId } = useClerkAuth();
+  const location = useLocation();
+  const { toast } = useToast();
 
   if (!isLoaded) {
     return (
@@ -15,7 +18,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!userId) {
-    return <Navigate to="/login" replace />;
+    // Show toast only when attempting to access specific protected routes
+    if (location.pathname === '/chat' || location.pathname === '/profile') {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to access this feature",
+        variant: "destructive",
+      });
+    }
+    
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   return <>{children}</>;

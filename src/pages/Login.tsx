@@ -1,6 +1,7 @@
 
 import { SignIn } from '@clerk/clerk-react';
 import { Link } from 'react-router-dom';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
 
 const Login = () => {
   return (
@@ -19,8 +20,18 @@ const Login = () => {
               </span>
             </div>
           </Link>
-          <h1 className="text-2xl font-bold mt-4">Sign In</h1>
-          <p className="text-gray-600 mt-2">Welcome back to TagAlong</p>
+          <h1 className="text-2xl font-bold mt-6 mb-2">Welcome back</h1>
+          <p className="text-gray-600">Sign in to your TagAlong account</p>
+        </div>
+
+        <div className="bg-tagalong-purple/5 p-4 rounded-xl mb-6 flex items-start">
+          <div className="bg-tagalong-purple/10 p-2 rounded-lg mr-3 mt-0.5">
+            <Lock className="w-5 h-5 text-tagalong-purple" />
+          </div>
+          <div className="text-sm">
+            <p className="font-medium text-gray-800">Secure sign in</p>
+            <p className="text-gray-600">Your information is securely encrypted and protected</p>
+          </div>
         </div>
 
         <SignIn 
@@ -30,10 +41,23 @@ const Login = () => {
               card: "shadow-none p-0",
               headerTitle: "hidden",
               headerSubtitle: "hidden",
-              socialButtonsBlockButton: "rounded-xl border border-gray-300 hover:bg-gray-50",
-              formButtonPrimary: "bg-tagalong-purple hover:bg-tagalong-purple-dark text-white rounded-full",
+              socialButtonsBlockButton: "rounded-xl border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2",
+              socialButtonsBlockButtonText: "flex-1",
+              formButtonPrimary: "bg-tagalong-purple hover:bg-tagalong-purple-dark text-white rounded-full py-3",
               footerActionLink: "text-tagalong-purple hover:text-tagalong-purple-dark",
-              formFieldInput: "rounded-xl border-gray-300 focus:border-tagalong-purple focus:ring-tagalong-purple",
+              formFieldInput: "rounded-xl border-gray-300 focus:border-tagalong-purple focus:ring-tagalong-purple py-3",
+              formFieldLabel: "font-medium text-gray-700",
+              formFieldLabelRow: "mb-1.5",
+              identityPreviewText: "text-gray-700",
+              identityPreviewEditButton: "text-tagalong-purple hover:text-tagalong-purple-dark",
+              formFieldAction: "text-tagalong-purple hover:text-tagalong-purple-dark",
+              formHeaderTitle: "text-xl font-bold text-gray-800",
+              formHeaderSubtitle: "text-gray-600",
+              alertText: "text-gray-800",
+              socialButtonsIconButton: "border border-gray-200 hover:bg-gray-50",
+              socialButtonsProviderIcon: "w-5 h-5",
+              formFieldInputShowPasswordButton: "text-gray-500",
+              formResendCodeLink: "text-tagalong-purple hover:text-tagalong-purple-dark",
             }
           }}
         />
@@ -42,7 +66,7 @@ const Login = () => {
           <p className="text-gray-600">
             Don't have an account?{' '}
             <Link to="/signup" className="text-tagalong-purple hover:underline font-medium">
-              Sign up
+              Sign up <ArrowRight className="inline w-4 h-4 ml-0.5" />
             </Link>
           </p>
         </div>
