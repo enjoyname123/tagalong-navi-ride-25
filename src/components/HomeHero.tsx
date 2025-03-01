@@ -11,8 +11,8 @@ const HomeHero = () => {
       
       <div className="relative h-[600px] overflow-hidden">
         <img 
-          src="https://images.unsplash.com/photo-1556122071-e404cb6f31c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" 
-          alt="People ridesharing" 
+          src="/lovable-uploads/3d403af9-3f7a-4133-8074-62b14798b7c8.png" 
+          alt="Person using ride-sharing app with taxi in background" 
           className="w-full h-full object-cover"
         />
       </div>

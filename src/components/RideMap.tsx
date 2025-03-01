@@ -11,9 +11,8 @@ type RideMapProps = {
   className?: string;
 };
 
-// Generate a valid public token format that will work with the free map style
-// This is a temporary solution since we can't use environment variables in the browser
-const MAPBOX_TOKEN = 'pk.eyJ1IjoidGFnYWxvbmctYXBwIiwiYSI6ImNsa3gwaWs3cjBqemkza28zY3RyZ2tuYzIifQ.KxdVCeZEehe-Vu4u4C1z2Q';
+// Use a valid public Mapbox token
+const MAPBOX_TOKEN = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA';
 
 const RideMap = ({ origin, destination, className = '' }: RideMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -73,6 +72,8 @@ const RideMap = ({ origin, destination, className = '' }: RideMapProps) => {
 
       // Draw a route between the points when the map loads
       map.on('load', () => {
+        setIsLoaded(true);
+        
         // Get route from Mapbox Directions API
         fetch(
           `https://api.mapbox.com/directions/v5/mapbox/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`
@@ -107,13 +108,10 @@ const RideMap = ({ origin, destination, className = '' }: RideMapProps) => {
                   }
                 });
               }
-              
-              setIsLoaded(true);
             }
           })
           .catch(error => {
             console.error('Error fetching route:', error);
-            setIsLoaded(true);
           });
       });
     } catch (error) {
