@@ -1,7 +1,7 @@
 
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Users } from 'lucide-react';
+import { AlertCircle, ArrowRight, MapPin, PhoneCall, Shield, Users } from 'lucide-react';
 
 const HomeHero = () => {
   return (
@@ -50,12 +50,72 @@ const HomeHero = () => {
               </Button>
             </div>
             
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-1 gap-6">
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="flex items-center text-white">
                 <div className="bg-white/20 rounded-full p-2 mr-3">
                   <Users className="w-5 h-5" />
                 </div>
-                <span>Only for Hyderabad</span>
+                <span>Only for Hyderabadis</span>
+              </div>
+              
+              <div className="flex items-center text-white">
+                <div className="bg-white/20 rounded-full p-2 mr-3">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <span>Verified Riders</span>
+              </div>
+              
+              <div className="flex items-center text-white">
+                <div className="bg-white/20 rounded-full p-2 mr-3">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <span>Real-time Tracking</span>
+              </div>
+            </div>
+            
+            {/* Emergency Services Section */}
+            <div className="mt-12 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+              <h3 className="text-white font-semibold mb-3 flex items-center">
+                <AlertCircle className="w-5 h-5 mr-2 text-red-400" />
+                Emergency Services
+              </h3>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="bg-red-600 hover:bg-red-700 flex items-center justify-center"
+                >
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  SOS
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-white text-white hover:bg-white/20 flex items-center justify-center"
+                >
+                  <PhoneCall className="w-4 h-4 mr-2" />
+                  Contact Help
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-white text-white hover:bg-white/20 flex items-center justify-center"
+                >
+                  <MapPin className="w-4 h-4 mr-2" />
+                  Share Location
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-white text-white hover:bg-white/20 flex items-center justify-center"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Police Helpline
+                </Button>
               </div>
             </div>
           </div>
