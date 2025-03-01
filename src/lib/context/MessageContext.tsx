@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import { Chat, ChatMessage, User } from '../types';
@@ -34,13 +33,11 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const { user } = useAuth();
 
   useEffect(() => {
-    // Load chats when user changes
     const fetchChats = async () => {
       setIsLoadingChats(true);
       
       try {
         if (user) {
-          // Filter mock chats to only show chats where this user is a participant
           const userChats = mockChats.filter(chat => 
             chat.participants.some(p => p.id === user.id)
           );
@@ -66,7 +63,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (chat) {
       setSelectedChat(chat);
       
-      // Mark all messages in this chat as read
       const updatedChats = chats.map(c => {
         if (c.id === chatId) {
           return {
@@ -97,7 +93,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isRead: false
     };
     
-    // Optimistically update the UI
     const updatedChats = chats.map(chat => {
       if (chat.id === chatId) {
         return {
@@ -119,12 +114,10 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       });
     }
     
-    // Add notification for demo
     if (selectedChat) {
       const otherUser = selectedChat.participants.find(p => p.id !== user.id);
       if (otherUser) {
         setTimeout(() => {
-          // Add a simulated response from the other user
           const responseMessage: ChatMessage = {
             id: `m${Date.now() + 1}`,
             senderId: otherUser.id,
@@ -154,17 +147,16 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
             });
           }
           
-          // Add a notification for the response
           addNotification({
             id: `n${Date.now()}`,
             title: 'New Message',
             message: `${otherUser.name} replied to your message`,
             timestamp: responseMessage.timestamp,
-            type: 'message',
+            type: 'chat_message',
             isRead: false,
             linkUrl: '/chat'
           });
-        }, 2000); // Simulate a 2-second delay for the response
+        }, 2000);
       }
     }
   };
@@ -172,7 +164,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const createChat = async (userId: string, rideId: string): Promise<string> => {
     if (!user) throw new Error('User not authenticated');
     
-    // Check if a chat already exists between these users for this ride
     const existingChat = chats.find(chat => 
       chat.rideId === rideId && 
       chat.participants.some(p => p.id === userId) &&
@@ -184,8 +175,6 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return existingChat.id;
     }
     
-    // In a real app, this would create a new chat in the database
-    // For demo, create a new chat with mock data
     const otherUser = mockUsers.find(u => u.id === userId);
     if (!otherUser) throw new Error('User not found');
     

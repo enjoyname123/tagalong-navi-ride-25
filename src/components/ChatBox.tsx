@@ -82,7 +82,10 @@ const ChatBox = ({ chat, currentUser }: ChatBoxProps) => {
               Say hello and start chatting about your ride details or any questions you may have.
             </p>
             <Button 
-              onClick={() => handleSendMessage("Hello! I'm interested in your ride.")}
+              onClick={() => {
+                const greeting = "Hello! I'm interested in your ride.";
+                sendMessage(chat.id, greeting);
+              }}
               className="bg-tagalong-purple hover:bg-tagalong-purple-dark text-white rounded-full"
             >
               Send a greeting
