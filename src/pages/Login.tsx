@@ -1,57 +1,8 @@
 
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/lib/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { SignIn } from '@clerk/clerk-react';
+import { Link } from 'react-router-dom';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      // For the demo, just use any email/password and redirect
-      // In a real app, this would authenticate with Supabase
-      // const { error } = await signIn(email, password);
-      
-      // if (error) {
-      //   toast({
-      //     title: 'Error',
-      //     description: error.message,
-      //     variant: 'destructive',
-      //   });
-      //   return;
-      // }
-
-      // For the demo, just simulate a successful login
-      setTimeout(() => {
-        toast({
-          title: 'Welcome back!',
-          description: 'You have successfully logged in.',
-        });
-        
-        navigate('/');
-      }, 1000);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-tagalong-gray">
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-md">
@@ -68,50 +19,24 @@ const Login = () => {
               </span>
             </div>
           </Link>
-          <h1 className="text-2xl font-bold mt-4">Welcome back</h1>
-          <p className="text-gray-600 mt-2">Sign in to your account</p>
+          <h1 className="text-2xl font-bold mt-4">Sign In</h1>
+          <p className="text-gray-600 mt-2">Welcome back to TagAlong</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="your.email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="rounded-xl"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor="password">Password</Label>
-              <a href="#" className="text-sm text-tagalong-purple hover:underline">
-                Forgot password?
-              </a>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="rounded-xl"
-            />
-          </div>
-
-          <Button 
-            type="submit" 
-            className="w-full bg-tagalong-purple hover:bg-tagalong-purple-dark text-white rounded-full tagalong-button"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Signing in...' : 'Sign in'}
-          </Button>
-        </form>
+        <SignIn 
+          appearance={{
+            elements: {
+              rootBox: "mx-auto",
+              card: "shadow-none p-0",
+              headerTitle: "hidden",
+              headerSubtitle: "hidden",
+              socialButtonsBlockButton: "rounded-xl border border-gray-300 hover:bg-gray-50",
+              formButtonPrimary: "bg-tagalong-purple hover:bg-tagalong-purple-dark text-white rounded-full",
+              footerActionLink: "text-tagalong-purple hover:text-tagalong-purple-dark",
+              formFieldInput: "rounded-xl border-gray-300 focus:border-tagalong-purple focus:ring-tagalong-purple",
+            }
+          }}
+        />
 
         <div className="mt-6 text-center">
           <p className="text-gray-600">

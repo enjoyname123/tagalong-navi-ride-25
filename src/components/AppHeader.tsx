@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/lib/context/AuthContext';
+import { useUser, useAuth, SignOutButton, UserButton } from '@clerk/clerk-react';
 import { useNotifications, Notification } from '@/lib/context/NotificationContext';
 import { useMessages } from '@/lib/context/MessageContext';
 import { formatDistanceToNow } from 'date-fns';
@@ -29,7 +29,8 @@ import {
 
 const AppHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user } = useUser();
+  const { isSignedIn } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { chats } = useMessages();
   const navigate = useNavigate();
@@ -37,15 +38,6 @@ const AppHeader = () => {
   const unreadMessages = chats.reduce((count, chat) => {
     return count + chat.messages.filter(m => !m.isRead && m.senderId !== user?.id).length;
   }, 0);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
 
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
@@ -102,7 +94,7 @@ const AppHeader = () => {
           
           {/* Authentication, Notifications & Profile */}
           <div className="flex items-center gap-3">
-            {user ? (
+            {isSignedIn ? (
               <>
                 {/* Notifications */}
                 <DropdownMenu>
@@ -178,42 +170,7 @@ const AppHeader = () => {
                 </Link>
                 
                 {/* User Profile */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full overflow-hidden">
-                      {user.profileImage ? (
-                        <img 
-                          src={user.profileImage} 
-                          alt={user.name} 
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-tagalong-purple/10 flex items-center justify-center text-tagalong-purple">
-                          {user.name.charAt(0)}
-                        </div>
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => navigate('/profile')}>
-                        <UserIcon className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <UserButton afterSignOutUrl="/" />
               </>
             ) : (
               <>
@@ -276,7 +233,7 @@ const AppHeader = () => {
               How it Works
             </Link>
             
-            {!user && (
+            {!isSignedIn && (
               <div className="pt-2 border-t border-gray-100">
                 <Button 
                   className="w-full bg-tagalong-purple hover:bg-tagalong-purple-dark text-white rounded-full tagalong-button mt-2"
