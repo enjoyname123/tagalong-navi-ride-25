@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import { Chat, ChatMessage, User } from '../types';
@@ -148,10 +149,8 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
           
           addNotification({
-            id: `n${Date.now()}`,
             title: 'New Message',
             message: `${otherUser.name} replied to your message`,
-            timestamp: responseMessage.timestamp,
             type: 'chat_message',
             isRead: false,
             linkUrl: '/chat'
