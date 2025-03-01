@@ -41,7 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // For demo, create a user object from Clerk data or use mock data
             
             // Try to find a matching mock user (for demo purposes)
-            const mockUser = mockUsers.find(u => u.email === clerkUser.primaryEmailAddress?.emailAddress);
+            const userEmail = clerkUser.primaryEmailAddress?.emailAddress || '';
+            const mockUser = mockUsers.find(u => u.id === userId || u.name.includes(clerkUser.firstName || ''));
             
             if (mockUser) {
               setUser(mockUser);
@@ -52,9 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 name: clerkUser.firstName && clerkUser.lastName 
                   ? `${clerkUser.firstName} ${clerkUser.lastName}`
                   : clerkUser.username || 'TagAlong User',
-                email: clerkUser.primaryEmailAddress?.emailAddress || '',
-                profileImage: clerkUser.imageUrl || null,
-                phone: clerkUser.phoneNumbers?.[0]?.phoneNumber || null,
+                profileImage: clerkUser.imageUrl || undefined,
                 rating: 0,
                 isVerified: clerkUser.emailAddresses?.[0]?.verification?.status === 'verified',
                 ridesCompleted: 0,
